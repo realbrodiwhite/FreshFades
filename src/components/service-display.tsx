@@ -10,8 +10,9 @@ import {
 
 export function ServiceDisplay() {
   const services = [
+    { id: "quick-lineup-1", name: "Quick Line Up", price: "$20", section: "Standard Services" },
     { id: "fresh-fade-1", name: "Fresh Fade", price: "$40", section: "Standard Services" },
-    { id: "cut-shave-1", name: "Cut & Shave", price: "$75", section: "Standard Services" },
+    { id: "cut-shave-1", name: "Fade & Shave", price: "$75", section: "Standard Services" },
     { id: "shave-1", name: "Shave", price: "$40", section: "Standard Services" },
     { id: "bi-weekly-lineups", name: "Bi-Weekly Lineups", price: "$40/month", section: "Lineup Subscriptions" },
     { id: "weekly-lineups", name: "Weekly Lineups", price: "$75/month", section: "Lineup Subscriptions" },
@@ -20,8 +21,8 @@ export function ServiceDisplay() {
     { id: "weekly-fade", name: "Weekly Fade", price: "$120/month", section: "Fade Subscriptions" },
     { id: "unlimited-fades", name: "Unlimited Fades", price: "$160/month", section: "Fade Subscriptions" },
     { id: "fresh-fade-2", name: "Fresh Fade", price: "$35", section: "Additional Services" },
-    { id: "cut-shave-2", name: "Cut & Shave", price: "$30", section: "Additional Services" },
-    { id: "fresh-fade-cut-shave", name: "Fresh Fade, Cut & Shave", price: "$60", section: "Additional Services" },
+    { id: "cut-shave-2", name: "Fade & Shave", price: "$30", section: "Additional Services" },
+    { id: "fresh-fade-cut-shave", name: "Fresh Fade, Fade & Shave", price: "$60", section: "Additional Services" },
   ];
 
   const sections = [...new Set(services.map(service => service.section))];
