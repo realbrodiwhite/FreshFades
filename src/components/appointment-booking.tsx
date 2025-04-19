@@ -15,13 +15,15 @@ import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
 
 export function AppointmentBooking() {
-  const [date, setDate] = useState<Date | undefined>(new Date());
-  const [name, setName] = useState<string>("");
+  const [firstName, setFirstName] = useState<string>("");
+  const [lastName, setLastName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
+  const [phoneNumber, setPhoneNumber] = useState<string>("");
+  const [date, setDate] = useState<Date | undefined>(new Date());
   const [service, setService] = useState<string>("Fresh Fade");
 
   const handleBooking = () => {
-    if (!date || !name || !email) {
+    if (!date || !firstName || !lastName || !email || !phoneNumber) {
       toast({
         title: "Error",
         description: "Please fill in all fields.",
@@ -41,21 +43,29 @@ export function AppointmentBooking() {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="place-items-center">
         <CardTitle>Book Appointment</CardTitle>
         <CardDescription>Choose your date and service.</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
         <div className="grid gap-2">
-          <Label htmlFor="name">Your Name</Label>
+          <Label htmlFor="firstName">First Name</Label>
           <Input
-            id="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            id="firstName"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
           />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="email">Your Email</Label>
+          <Label htmlFor="lastName">Last Name</Label>
+          <Input
+            id="lastName"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="email">Email</Label>
           <Input
             id="email"
             type="email"
@@ -64,6 +74,15 @@ export function AppointmentBooking() {
           />
         </div>
         <div className="grid gap-2">
+          <Label htmlFor="phoneNumber">Phone Number</Label>
+          <Input
+            id="phoneNumber"
+            type="tel"
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+          />
+        </div>
+        <div className="grid gap-2 place-items-center">
           <Label>Preferred Date</Label>
           <Calendar mode="single" selected={date} onSelect={setDate} />
         </div>
@@ -81,7 +100,7 @@ export function AppointmentBooking() {
             <option value="Weekly Lineup">Weekly Lineup</option>
           </select>
         </div>
-        <Button onClick={handleBooking}>Book Now</Button>
+        <Button className="w-full" onClick={handleBooking}>Book Now</Button>
       </CardContent>
     </Card>
   );
