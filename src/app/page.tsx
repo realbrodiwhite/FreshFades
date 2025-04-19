@@ -17,9 +17,9 @@ export default function Home() {
           </CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4">
-          <AppointmentBooking />
-          <Separator />
           <ServiceDisplay />
+          <Separator />
+          <AppointmentBooking />
         </CardContent>
       </Card>
     </div>
