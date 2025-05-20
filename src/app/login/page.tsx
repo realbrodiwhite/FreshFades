@@ -6,8 +6,9 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { signInWithEmailAndPassword, UserCredential } from "firebase/auth";
+import { auth, db } from "@/lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -38,13 +39,43 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, data.email, data.password);
+      const userCredential: UserCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
       toast({
         title: "Login Successful",
         description: "Welcome back!",
       });
-      // For now, redirect all users to client dashboard. Role-based routing will be next.
-      router.push("/client/dashboard");
+
+      const user = userCredential.user;
+      if (user) {
+        const userDocRef = doc(db, "users", user.uid);
+        const userDocSnap = await getDoc(userDocRef);
+
+        if (userDocSnap.exists()) {
+          const userData = userDocSnap.data();
+          if (userData.role === "admin") {
+            router.push("/admin/dashboard");
+          } else {
+            router.push("/client/dashboard");
+          }
+        } else {
+          // Fallback if user document doesn't exist (e.g., user created before role system)
+          console.warn("User document not found in Firestore for UID:", user.uid, "Defaulting to client dashboard.");
+          // Create a user document with default 'client' role if it's missing
+          try {
+            await setDoc(doc(db, "users", user.uid), {
+              email: user.email,
+              role: "client", 
+              createdAt: new Date(),
+            });
+          } catch (dbError) {
+             console.error("Error creating user document in Firestore:", dbError);
+          }
+          router.push("/client/dashboard");
+        }
+      } else {
+        // Should not happen if signInWithEmailAndPassword was successful, but as a fallback
+        router.push("/client/dashboard");
+      }
     } catch (error: any) {
       let errorMessage = "Invalid email or password. Please try again.";
       if (error.code === "auth/user-not-found" || error.code === "auth/wrong-password" || error.code === "auth/invalid-credential") {

@@ -6,8 +6,9 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { createUserWithEmailAndPassword, UserCredential } from "firebase/auth";
+import { auth, db } from "@/lib/firebase";
+import { doc, setDoc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -44,12 +45,25 @@ export default function SignUpPage() {
   const onSubmit = async (data: SignUpFormValues) => {
     setIsLoading(true);
     try {
-      await createUserWithEmailAndPassword(auth, data.email, data.password);
+      const userCredential: UserCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+      const user = userCredential.user;
+
+      if (user) {
+        // Create a user document in Firestore
+        await setDoc(doc(db, "users", user.uid), {
+          email: user.email,
+          role: "client", // Default role
+          createdAt: new Date(),
+        });
+      }
+
       toast({
         title: "Account Created",
         description: "You have successfully signed up!",
       });
-      router.push("/client/dashboard"); // Or a verification page
+      // For now, redirect all users to client dashboard after signup.
+      // Login will handle role-based redirection.
+      router.push("/client/dashboard");
     } catch (error: any) {
       let errorMessage = "An unexpected error occurred. Please try again.";
       if (error.code === "auth/email-already-in-use") {
