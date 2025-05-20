@@ -1,7 +1,7 @@
 
 "use client";
 
-import type { Service } from "@/lib/types";
+import type { Service, Appointment } from "@/lib/types";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Card,
@@ -27,10 +27,14 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Icons } from "@/components/icons"; 
+import { Icons } from "@/components/icons";
+import { auth, db } from "@/lib/firebase";
+import { User, onAuthStateChanged } from "firebase/auth";
+import { collection, addDoc, serverTimestamp, Timestamp } from "firebase/firestore";
 
 interface AppointmentBookingProps {
   bookableServices: Service[];
+  // We might add a prop here later if booking is initiated from a dashboard for a specific user
 }
 
 const appointmentFormSchema = z.object({
@@ -43,11 +47,11 @@ const appointmentFormSchema = z.object({
     invalid_type_error: "Invalid date format.",
   }),
   selectedServiceId: z.string({ required_error: "Please select a service." }).min(1, {message: "Please select a service."}),
+  notes: z.string().optional(),
 });
 
 type AppointmentFormValues = z.infer<typeof appointmentFormSchema>;
 
-// Placeholder for Calendar to be shown during SSR and initial client render
 const CalendarPlaceholder = () => (
   <div className="rounded-md border p-3 h-[320px] w-[300px] flex flex-col items-center justify-center bg-muted/20">
     <Icons.loader className="h-8 w-8 animate-spin text-muted-foreground mb-2" />
@@ -58,9 +62,15 @@ const CalendarPlaceholder = () => (
 
 export function AppointmentBooking({ bookableServices }: AppointmentBookingProps) {
   const [isClient, setIsClient] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+    });
+    return () => unsubscribe();
   }, []);
 
   const form = useForm<AppointmentFormValues>({
@@ -70,13 +80,21 @@ export function AppointmentBooking({ bookableServices }: AppointmentBookingProps
       lastName: "",
       email: "",
       phoneNumber: "",
-      date: new Date(), // Default to current date
+      date: new Date(), 
       selectedServiceId: bookableServices.length > 0 ? bookableServices[0].id : undefined,
+      notes: "",
     },
   });
 
   useEffect(() => {
-    // Update default service ID if bookableServices changes
+    if (currentUser) {
+      // Pre-fill email if user is logged in, can be expanded to other fields later
+      form.setValue("email", currentUser.email || "");
+      // Could pre-fill name if we store it in their auth profile or Firestore user doc
+    }
+  }, [currentUser, form]);
+
+  useEffect(() => {
     if (bookableServices.length > 0) {
         const currentServiceId = form.getValues("selectedServiceId");
         const isValidService = bookableServices.some(s => s.id === currentServiceId);
@@ -89,60 +107,110 @@ export function AppointmentBooking({ bookableServices }: AppointmentBookingProps
   }, [bookableServices, form]);
 
 
-  const onSubmit = (data: AppointmentFormValues) => {
-    const serviceName = bookableServices.find(s => s.id === data.selectedServiceId)?.name || "Selected Service";
+  const onSubmit = async (data: AppointmentFormValues) => {
+    setIsSubmitting(true);
+    const selectedService = bookableServices.find(s => s.id === data.selectedServiceId);
+    if (!selectedService) {
+      toast({ title: "Error", description: "Selected service not found.", variant: "destructive" });
+      setIsSubmitting(false);
+      return;
+    }
 
-    toast({
-      title: "Booking Submitted (Mock)",
-      description: `Appointment for ${data.firstName} ${data.lastName} on ${data.date.toLocaleDateString()} for ${serviceName}. Contact: ${data.email}, ${data.phoneNumber}`,
-    });
-    console.log("Form data:", data);
-    // Here you would typically call an API to save the appointment
-    // form.reset(); // Optionally reset form after submission
+    const appointmentData: Omit<Appointment, "id" | "createdAt" | "updatedAt"> & { createdAt: any } = {
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+      phoneNumber: data.phoneNumber,
+      date: Timestamp.fromDate(data.date),
+      selectedServiceId: data.selectedServiceId,
+      serviceName: selectedService.name,
+      servicePrice: selectedService.price,
+      status: currentUser ? 'confirmed' : 'pending_approval',
+      notes: data.notes || "",
+      createdAt: serverTimestamp(), // Firestore server-side timestamp
+    };
+
+    if (currentUser) {
+      appointmentData.userId = currentUser.uid;
+    }
+
+    try {
+      const docRef = await addDoc(collection(db, "appointments"), appointmentData);
+      toast({
+        title: currentUser ? "Appointment Confirmed!" : "Appointment Request Submitted!",
+        description: currentUser 
+          ? `Your appointment for ${selectedService.name} on ${data.date.toLocaleDateString()} is confirmed. We'll contact you if there are any issues.`
+          : `Your request for ${selectedService.name} on ${data.date.toLocaleDateString()} has been sent for approval. We'll contact you soon!`,
+      });
+      console.log("Appointment document written with ID: ", docRef.id);
+      form.reset({ 
+        ...form.getValues(), // keep some values if needed or reset completely
+        date: new Date(), // Reset date to today
+        notes: "",
+        // Consider not resetting name/email/phone if it's a guest to allow multiple requests easily
+      }); 
+    } catch (error) {
+      console.error("Error adding appointment: ", error);
+      toast({
+        title: "Booking Failed",
+        description: "Could not save your appointment. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const today = new Date();
-  today.setHours(0, 0, 0, 0); // Start of today
+  today.setHours(0, 0, 0, 0); 
 
   const twelveMonthsFromNow = new Date();
   twelveMonthsFromNow.setMonth(twelveMonthsFromNow.getMonth() + 12);
-  twelveMonthsFromNow.setHours(23, 59, 59, 999); // End of the day, 12 months from now
+  twelveMonthsFromNow.setHours(23, 59, 59, 999); 
 
   return (
     <Card className="shadow-md">
       <CardHeader className="place-items-center text-center">
-        <CardTitle>Book Appointment</CardTitle>
-        <CardDescription>Choose your date and service. You can book up to 12 months in advance.</CardDescription>
+        <CardTitle>
+          {currentUser ? "Book Your Appointment" : "Request an Appointment"}
+        </CardTitle>
+        <CardDescription>
+          {currentUser 
+            ? "Choose your date and service. You can book up to 12 months in advance." 
+            : "Fill out the form to request an appointment. We'll confirm via email/phone. Create an account to manage your bookings!"}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4">
-            <FormField
-              control={form.control}
-              name="firstName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>First Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter first name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="lastName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Last Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter last name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="firstName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>First Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter first name" {...field} disabled={isSubmitting} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="lastName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Last Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter last name" {...field} disabled={isSubmitting} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <FormField
               control={form.control}
               name="email"
@@ -150,7 +218,7 @@ export function AppointmentBooking({ bookableServices }: AppointmentBookingProps
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="Enter email address" {...field} />
+                    <Input type="email" placeholder="Enter email address" {...field} disabled={isSubmitting || !!(currentUser && currentUser.email)} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -163,7 +231,7 @@ export function AppointmentBooking({ bookableServices }: AppointmentBookingProps
                 <FormItem>
                   <FormLabel>Phone Number</FormLabel>
                   <FormControl>
-                    <Input type="tel" placeholder="Enter phone number" {...field} />
+                    <Input type="tel" placeholder="Enter phone number" {...field} disabled={isSubmitting} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -182,7 +250,7 @@ export function AppointmentBooking({ bookableServices }: AppointmentBookingProps
                         selected={field.value}
                         onSelect={field.onChange}
                         className="rounded-md border"
-                        disabled={(day) => day < today || day > twelveMonthsFromNow } // Disable past dates and dates > 12 months
+                        disabled={(day) => day < today || day > twelveMonthsFromNow || isSubmitting } 
                       />
                     ) : (
                       <CalendarPlaceholder />
@@ -198,7 +266,7 @@ export function AppointmentBooking({ bookableServices }: AppointmentBookingProps
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Select Service</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value} disabled={isSubmitting}>
                     <FormControl>
                       <SelectTrigger id="service">
                         <SelectValue placeholder="Select a service" />
@@ -216,9 +284,29 @@ export function AppointmentBooking({ bookableServices }: AppointmentBookingProps
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full" disabled={bookableServices.length === 0 || form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? "Booking..." : "Book Now"}
+             <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Notes (Optional)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Any specific requests or details?" {...field} disabled={isSubmitting} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" className="w-full" disabled={bookableServices.length === 0 || isSubmitting}>
+              {isSubmitting ? 
+                <><Icons.spinner className="mr-2 h-4 w-4 animate-spin" /> Submitting...</> : 
+                (currentUser ? "Confirm Booking" : "Request Appointment")}
             </Button>
+            {!currentUser && (
+              <p className="text-sm text-center text-muted-foreground mt-2">
+                <a href="/signup" className="underline hover:text-primary">Sign up</a> or <a href="/login" className="underline hover:text-primary">Login</a> to manage your appointments easily.
+              </p>
+            )}
           </form>
         </Form>
       </CardContent>
