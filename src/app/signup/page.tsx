@@ -6,58 +6,63 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import Link from "next/link";
 import { Icons } from "@/components/icons";
 import { toast } from "@/hooks/use-toast";
 
-const loginFormSchema = z.object({
+const signUpFormSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }),
-  password: z.string().min(1, { message: "Password is required." }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters." }),
+  confirmPassword: z.string().min(6, { message: "Password must be at least 6 characters." }),
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords do not match.",
+  path: ["confirmPassword"], // Path to field to display error
 });
 
-type LoginFormValues = z.infer<typeof loginFormSchema>;
+type SignUpFormValues = z.infer<typeof signUpFormSchema>;
 
-export default function LoginPage() {
+export default function SignUpPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<LoginFormValues>({
-    resolver: zodResolver(loginFormSchema),
+  const form = useForm<SignUpFormValues>({
+    resolver: zodResolver(signUpFormSchema),
     defaultValues: {
       email: "",
       password: "",
+      confirmPassword: "",
     },
   });
 
-  const onSubmit = async (data: LoginFormValues) => {
+  const onSubmit = async (data: SignUpFormValues) => {
     setIsLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, data.email, data.password);
+      await createUserWithEmailAndPassword(auth, data.email, data.password);
       toast({
-        title: "Login Successful",
-        description: "Welcome back!",
+        title: "Account Created",
+        description: "You have successfully signed up!",
       });
-      // For now, redirect all users to client dashboard. Role-based routing will be next.
-      router.push("/client/dashboard");
+      router.push("/client/dashboard"); // Or a verification page
     } catch (error: any) {
-      let errorMessage = "Invalid email or password. Please try again.";
-      if (error.code === "auth/user-not-found" || error.code === "auth/wrong-password" || error.code === "auth/invalid-credential") {
-        errorMessage = "Invalid email or password. Please try again.";
-      } else if (error.code === "auth/too-many-requests") {
-        errorMessage = "Too many failed login attempts. Please try again later or reset your password.";
+      let errorMessage = "An unexpected error occurred. Please try again.";
+      if (error.code === "auth/email-already-in-use") {
+        errorMessage = "This email address is already in use.";
+      } else if (error.code === "auth/weak-password") {
+        errorMessage = "The password is too weak.";
       }
       toast({
-        title: "Login Failed",
+        title: "Sign Up Failed",
         description: errorMessage,
         variant: "destructive",
       });
-      console.error("Login error:", error);
+      console.error("Sign up error:", error);
     } finally {
       setIsLoading(false);
     }
@@ -67,8 +72,8 @@ export default function LoginPage() {
     <div className="flex flex-col min-h-screen bg-background antialiased items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Login</CardTitle>
-          <CardDescription>Access your client or admin dashboard.</CardDescription>
+          <CardTitle className="text-2xl font-bold">Create an Account</CardTitle>
+          <CardDescription>Enter your details to sign up.</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -99,21 +104,29 @@ export default function LoginPage() {
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirm Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="••••••••" {...field} disabled={isLoading} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />}
-                Login
+                Sign Up
               </Button>
             </form>
           </Form>
           <div className="mt-4 text-center text-sm">
-            Don&apos;t have an account?{" "}
-            <Link href="/signup" className="underline hover:text-primary">
-              Sign up
-            </Link>
-          </div>
-           <div className="mt-2 text-center text-sm">
-            <Link href="/forgot-password" className="underline hover:text-primary">
-              Forgot password?
+            Already have an account?{" "}
+            <Link href="/login" className="underline hover:text-primary">
+              Login
             </Link>
           </div>
           <div className="mt-6 text-center border-t pt-4">
