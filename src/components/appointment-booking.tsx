@@ -11,7 +11,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label"; // Keep for non-form labels if any, but FormLabel is preferred
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { toast } from "@/hooks/use-toast";
@@ -28,6 +27,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Icons } from "@/components/icons"; // Added import for Icons
 
 interface AppointmentBookingProps {
   bookableServices: Service[];
@@ -47,7 +47,22 @@ const appointmentFormSchema = z.object({
 
 type AppointmentFormValues = z.infer<typeof appointmentFormSchema>;
 
+// Placeholder for Calendar to be shown during SSR and initial client render
+const CalendarPlaceholder = () => (
+  <div className="rounded-md border p-3 h-[320px] w-[300px] flex flex-col items-center justify-center bg-muted/20">
+    <Icons.loader className="h-8 w-8 animate-spin text-muted-foreground mb-2" />
+    <p className="text-sm text-muted-foreground">Loading Calendar...</p>
+  </div>
+);
+
+
 export function AppointmentBooking({ bookableServices }: AppointmentBookingProps) {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   const form = useForm<AppointmentFormValues>({
     resolver: zodResolver(appointmentFormSchema),
     defaultValues: {
@@ -55,14 +70,13 @@ export function AppointmentBooking({ bookableServices }: AppointmentBookingProps
       lastName: "",
       email: "",
       phoneNumber: "",
-      date: new Date(),
+      date: new Date(), // Default to current date
       selectedServiceId: bookableServices.length > 0 ? bookableServices[0].id : undefined,
     },
   });
 
   useEffect(() => {
-    // Update default service ID if bookableServices changes and no service is selected
-    // or if the selected one is no longer available (though schema requires selection)
+    // Update default service ID if bookableServices changes
     if (bookableServices.length > 0) {
         const currentServiceId = form.getValues("selectedServiceId");
         const isValidService = bookableServices.some(s => s.id === currentServiceId);
@@ -155,13 +169,17 @@ export function AppointmentBooking({ bookableServices }: AppointmentBookingProps
                 <FormItem className="grid gap-2 place-items-center">
                   <FormLabel>Preferred Date</FormLabel>
                   <FormControl>
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                      className="rounded-md border"
-                      disabled={(day) => day < new Date(new Date().setHours(0,0,0,0)) } // Disable past dates
-                    />
+                    {isClient ? (
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        className="rounded-md border"
+                        disabled={(day) => day < new Date(new Date().setHours(0,0,0,0)) } // Disable past dates
+                      />
+                    ) : (
+                      <CalendarPlaceholder />
+                    )}
                   </FormControl>
                   <FormMessage />
                 </FormItem>
