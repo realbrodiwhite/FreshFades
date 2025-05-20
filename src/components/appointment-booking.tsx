@@ -1,5 +1,7 @@
+
 "use client";
 
+import type { Service } from "@/lib/types";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Card,
@@ -11,39 +13,52 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-export function AppointmentBooking() {
+interface AppointmentBookingProps {
+  bookableServices: Service[];
+}
+
+export function AppointmentBooking({ bookableServices }: AppointmentBookingProps) {
   const [firstName, setFirstName] = useState<string>("");
   const [lastName, setLastName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [phoneNumber, setPhoneNumber] = useState<string>("");
   const [date, setDate] = useState<Date | undefined>(new Date());
-  const [service, setService] = useState<string>("Fresh Fade");
+  const [selectedServiceId, setSelectedServiceId] = useState<string>(bookableServices.length > 0 ? bookableServices[0].id : "");
+
+  useEffect(() => {
+    // Ensure selectedServiceId is valid if bookableServices changes or on initial load
+    if (bookableServices.length > 0 && !bookableServices.find(s => s.id === selectedServiceId)) {
+      setSelectedServiceId(bookableServices[0].id);
+    }
+  }, [bookableServices, selectedServiceId]);
+
 
   const handleBooking = () => {
-    if (!date || !firstName || !lastName || !email || !phoneNumber) {
+    if (!date || !firstName || !lastName || !email || !phoneNumber || !selectedServiceId) {
       toast({
         title: "Error",
-        description: "Please fill in all fields.",
+        description: "Please fill in all fields and select a service.",
         variant: "destructive",
       });
       return;
     }
 
+    const serviceName = bookableServices.find(s => s.id === selectedServiceId)?.name || "Selected Service";
+
     // Simulate booking process
     toast({
       title: "Success",
-      description: `Appointment booked for ${
-        date.toLocaleDateString()
-      } for ${service}.`,
+      description: `Appointment booked for ${date.toLocaleDateString()} for ${serviceName}.`,
     });
   };
 
   return (
-    <Card>
-      <CardHeader className="place-items-center">
+    <Card className="shadow-md">
+      <CardHeader className="place-items-center text-center">
         <CardTitle>Book Appointment</CardTitle>
         <CardDescription>Choose your date and service.</CardDescription>
       </CardHeader>
@@ -54,6 +69,7 @@ export function AppointmentBooking() {
             id="firstName"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
+            placeholder="Enter first name"
           />
         </div>
         <div className="grid gap-2">
@@ -62,6 +78,7 @@ export function AppointmentBooking() {
             id="lastName"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
+            placeholder="Enter last name"
           />
         </div>
         <div className="grid gap-2">
@@ -71,6 +88,7 @@ export function AppointmentBooking() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            placeholder="Enter email address"
           />
         </div>
         <div className="grid gap-2">
@@ -80,27 +98,35 @@ export function AppointmentBooking() {
             type="tel"
             value={phoneNumber}
             onChange={(e) => setPhoneNumber(e.target.value)}
+            placeholder="Enter phone number"
           />
         </div>
         <div className="grid gap-2 place-items-center">
           <Label>Preferred Date</Label>
-          <Calendar mode="single" selected={date} onSelect={setDate} />
+          <Calendar
+            mode="single"
+            selected={date}
+            onSelect={setDate}
+            className="rounded-md border"
+            disabled={(day) => day < new Date(new Date().setHours(0,0,0,0)) } // Disable past dates
+          />
         </div>
         <div className="grid gap-2">
           <Label htmlFor="service">Select Service</Label>
-          <select
-            id="service"
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            value={service}
-            onChange={(e) => setService(e.target.value)}
-          >
-            <option value="Fresh Fade">Fresh Fade</option>
-            <option value="Cut & Shave">Cut & Shave</option>
-            <option value="Shave">Shave</option>
-            <option value="Weekly Lineup">Weekly Lineup</option>
-          </select>
+          <Select value={selectedServiceId} onValueChange={setSelectedServiceId}>
+            <SelectTrigger id="service">
+              <SelectValue placeholder="Select a service" />
+            </SelectTrigger>
+            <SelectContent>
+              {bookableServices.map(service => (
+                <SelectItem key={service.id} value={service.id}>
+                  {service.name} ({service.price})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-        <Button className="w-full" onClick={handleBooking}>Book Now</Button>
+        <Button className="w-full" onClick={handleBooking} disabled={bookableServices.length === 0}>Book Now</Button>
       </CardContent>
     </Card>
   );
