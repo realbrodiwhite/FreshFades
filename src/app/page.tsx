@@ -10,8 +10,8 @@ import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/icons";
-import { MapPin, Phone, Scissors, Truck, CalendarDays, Users, Clock } from "lucide-react";
-import Image from "next/image";
+import { MapPin, Phone, Truck, CalendarDays, Users, Clock } from "lucide-react";
+import Image from "next/image"; // Imported Image component
 
 const allServices: Service[] = [
   { id: "quick-lineup", name: "Quick Line Up", price: "$20", section: "Standard Services", description: "Touching up lines and quickly cleaning it up." },
@@ -41,11 +41,15 @@ export default function Home() {
     <div className="flex flex-col min-h-screen bg-background antialiased">
       <header className="sticky top-0 z-50 py-4 bg-card shadow-md">
         <div className="container mx-auto flex items-center justify-between px-4">
-          <Link href="/" className="flex items-center gap-2">
-            <Scissors className="h-8 w-8 text-primary" />
-            <h1 className="text-2xl md:text-3xl font-bold text-primary">
-              Fresh Fades
-            </h1>
+          <Link href="/" className="flex items-center">
+            <Image
+              src="/logo.png"
+              alt="Fresh Fades Cut & Shave Logo"
+              width={150} 
+              height={150}
+              className="h-10 w-auto md:h-12" 
+              priority // Add priority if it's LCP
+            />
           </Link>
           <div className="flex items-center gap-2">
             <Link href="/login" passHref>
@@ -103,7 +107,7 @@ export default function Home() {
                 </p>
                 <p className="text-muted-foreground leading-relaxed">
                   We understand life gets busy. That's why we bring the barbershop experience to your doorstep with our <span className="font-semibold text-primary">Mobile Barber Service</span>. 
-                  Prefer a traditional setting? Visit us at <span className="font-semibold text-primary">Ricky's Place</span>, our comfortable and private home-based shop in Monte Vista, Colorado. All services at Ricky's Place are by appointment only.
+                  Prefer a traditional setting? Visit us at <span className="font-semibold text-primary">Ricky's Place</span>, our comfortable and private in-home barbershop in Monte Vista, Colorado. All services at Ricky's Place are by appointment only.
                 </p>
                  <div className="flex space-x-4 pt-4">
                   <Link href="#services">
@@ -148,7 +152,7 @@ export default function Home() {
               <Card className="shadow-lg hover:shadow-xl transition-shadow">
                 <CardHeader className="items-center text-center">
                   <div className="p-3 bg-primary/10 rounded-full mb-2">
-                    <Scissors className="h-10 w-10 text-primary" />
+                    <Icons.scissors className="h-10 w-10 text-primary" />
                   </div>
                   <CardTitle>Expert Barbering</CardTitle>
                 </CardHeader>
