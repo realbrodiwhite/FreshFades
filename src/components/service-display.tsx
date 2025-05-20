@@ -10,11 +10,11 @@ import {
 
 export function ServiceDisplay() {
   const services = [
-    { id: "quick-lineup-1", name: "Quick Line Up", price: "$20", section: "Standard Services" },
-    { id: "fresh-fade-1", name: "Fresh Fade", price: "$40", section: "Standard Services" },
-    { id: "cut-shave-1", name: "Fade & Shave", price: "$75", section: "Standard Services" },
-    { id: "shave-1", name: "Shave", price: "$40", section: "Standard Services" },
-    { id: "bi-weekly-lineups", name: "Bi-Weekly Lineups", price: "$40/month", section: "Lineup Subscriptions" },
+    { id: "quick-lineup", name: "Quick Line Up", price: "$20", section: "Standard Services" },
+    { id: "hot shave", name: "Hot Shave", price: "$30", section: "Standard Services" },
+    { id: "fresh-fade", name: "Fresh Fade", price: "$35", section: "Standard Services" },
+    { id: "cut-shave", name: "Fade & Shave", price: "$60", section: "Standard Services" },
+    { id: "2-lineups-monthly", name: "2 Lineups Monthly", price: "$40/month", section: "Lineup Subscriptions" },
     { id: "weekly-lineups", name: "Weekly Lineups", price: "$75/month", section: "Lineup Subscriptions" },
     { id: "unlimited-lineups", name: "Unlimited Lineups", price: "$145/month", section: "Lineup Subscriptions" },
     { id: "bi-weekly-fade", name: "Bi-Weekly Fade", price: "$65/month", section: "Fade Subscriptions" },

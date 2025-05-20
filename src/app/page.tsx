@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Toaster } from "@/components/ui/toaster";
@@ -5,10 +6,12 @@ import { AppointmentBooking } from "@/components/appointment-booking";
 import { ServiceDisplay } from "@/components/service-display";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
   return (
-    <div className="flex flex-col min-h-screen bg-background antialiased container py-12">
+    <div className="flex flex-col min-h-screen bg-background antialiased container py-12 space-y-8">
       <Toaster />
       <Card className="w-full max-w-3xl mx-auto">
         <CardHeader className="space-y-2">
@@ -20,6 +23,20 @@ export default function Home() {
           <ServiceDisplay />
           <Separator />
           <AppointmentBooking />
+        </CardContent>
+      </Card>
+
+      <Card className="w-full max-w-3xl mx-auto">
+        <CardHeader>
+          <CardTitle className="text-xl font-bold text-center">Navigation</CardTitle>
+        </CardHeader>
+        <CardContent className="flex justify-center gap-4">
+          <Link href="/client/dashboard" passHref>
+            <Button variant="outline">Client Dashboard</Button>
+          </Link>
+          <Link href="/admin/dashboard" passHref>
+            <Button variant="outline">Admin Dashboard</Button>
+          </Link>
         </CardContent>
       </Card>
     </div>
