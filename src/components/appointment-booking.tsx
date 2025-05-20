@@ -27,7 +27,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Icons } from "@/components/icons"; // Added import for Icons
+import { Icons } from "@/components/icons"; 
 
 interface AppointmentBookingProps {
   bookableServices: Service[];
@@ -101,11 +101,18 @@ export function AppointmentBooking({ bookableServices }: AppointmentBookingProps
     // form.reset(); // Optionally reset form after submission
   };
 
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Start of today
+
+  const twelveMonthsFromNow = new Date();
+  twelveMonthsFromNow.setMonth(twelveMonthsFromNow.getMonth() + 12);
+  twelveMonthsFromNow.setHours(23, 59, 59, 999); // End of the day, 12 months from now
+
   return (
     <Card className="shadow-md">
       <CardHeader className="place-items-center text-center">
         <CardTitle>Book Appointment</CardTitle>
-        <CardDescription>Choose your date and service.</CardDescription>
+        <CardDescription>Choose your date and service. You can book up to 12 months in advance.</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -175,7 +182,7 @@ export function AppointmentBooking({ bookableServices }: AppointmentBookingProps
                         selected={field.value}
                         onSelect={field.onChange}
                         className="rounded-md border"
-                        disabled={(day) => day < new Date(new Date().setHours(0,0,0,0)) } // Disable past dates
+                        disabled={(day) => day < today || day > twelveMonthsFromNow } // Disable past dates and dates > 12 months
                       />
                     ) : (
                       <CalendarPlaceholder />

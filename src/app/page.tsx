@@ -103,7 +103,7 @@ export default function Home() {
                 </p>
                 <p className="text-muted-foreground leading-relaxed">
                   We understand life gets busy. That's why we bring the barbershop experience to your doorstep with our <span className="font-semibold text-primary">Mobile Barber Service</span>. 
-                  Prefer a traditional setting? Visit us at <span className="font-semibold text-primary">Ricky's Place</span>, our cozy home-based shop in Monte Vista, Colorado, for a personalized and relaxing cut.
+                  Prefer a traditional setting? Visit us at <span className="font-semibold text-primary">Ricky's Place</span>, our comfortable and private home-based shop in Monte Vista, Colorado. All services at Ricky's Place are by appointment only.
                 </p>
                  <div className="flex space-x-4 pt-4">
                   <Link href="#services">
@@ -142,7 +142,7 @@ export default function Home() {
                   <CardTitle>Ricky's Place (Monte Vista)</CardTitle>
                 </CardHeader>
                 <CardContent className="text-center text-muted-foreground">
-                  Visit our comfortable and private home-based shop in Monte Vista, CO, for a dedicated and personalized grooming session.
+                  Visit our comfortable and private in-home shop in Monte Vista, CO, for a dedicated and personalized grooming session. By appointment only.
                 </CardContent>
               </Card>
               <Card className="shadow-lg hover:shadow-xl transition-shadow">
@@ -215,14 +215,14 @@ export default function Home() {
               <div className="space-y-4">
                 <h2 className="text-3xl font-bold text-foreground">Visit Us at Ricky's Place</h2>
                 <p className="text-muted-foreground leading-relaxed">
-                  For those who prefer a dedicated barbershop environment, Ricky's Place offers a welcoming and professional setting at our home-based location in <span className="font-semibold text-primary">Monte Vista, Colorado</span>.
+                  For those who prefer a dedicated barbershop environment, Ricky's Place offers a welcoming and professional setting at our <span className="font-semibold text-primary">in-home barbershop in Monte Vista, Colorado</span>.
                 </p>
                 <p className="text-muted-foreground leading-relaxed">
-                  Enjoy a focused grooming experience with all the amenities you'd expect. Perfect for a relaxing escape and a precision cut.
+                  Enjoy a focused grooming experience in a comfortable and private atmosphere. All services at Ricky's Place are <span className="font-semibold text-primary">strictly by appointment only</span>. Please book in advance to secure your spot.
                 </p>
                 <div className="flex items-center text-muted-foreground">
                   <MapPin className="h-5 w-5 mr-2 text-primary" />
-                  <span>Monte Vista, Colorado (Full address provided upon booking)</span>
+                  <span>Monte Vista, Colorado (Full address provided upon successful booking)</span>
                 </div>
                  <div className="flex items-center text-muted-foreground">
                   <Clock className="h-5 w-5 mr-2 text-primary" />
@@ -291,7 +291,7 @@ export default function Home() {
           </div>
           <p className="text-sm">
             Servicing Monte Vista, CO and surrounding areas for mobile appointments. <br/>
-            Ricky's Place located in Monte Vista, CO (address upon booking).
+            Ricky's Place (in-home barbershop) located in Monte Vista, CO (address upon booking, by appointment only).
           </p>
           <Separator className="my-6 max-w-xs mx-auto" />
           <p>&copy; {new Date().getFullYear()} Fresh Fades Cut & Shave. All rights reserved.</p>

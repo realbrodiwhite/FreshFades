@@ -12,7 +12,18 @@ export default function ClientDashboardPage() {
         </CardHeader>
         <CardContent className="text-center space-y-4">
           <p>Welcome to your dashboard. Here you will be able to manage your appointments and profile.</p>
-          {/* Placeholder for future client dashboard features */}
+          {/* 
+            Future features:
+            - View upcoming appointments
+            - View past appointments
+            - Cancel or reschedule appointments (if functionality allows)
+            - Manage profile details
+          */}
+          <div className="bg-muted p-4 rounded-md">
+            <p className="text-sm text-muted-foreground">
+              Appointment management features are coming soon! You can currently book multiple appointments through the homepage.
+            </p>
+          </div>
           <div className="mt-6">
             <Link href="/" passHref>
               <Button variant="outline">Back to Home</Button>
