@@ -37,11 +37,16 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-background antialiased">
       <header className="py-6 bg-card shadow-sm">
-        <div className="container mx-auto text-center">
-          <h1 className="text-4xl font-bold text-primary">
-            Fresh Fades Cut & Shave
-          </h1>
-          <p className="text-muted-foreground">Book your appointment now!</p>
+        <div className="container mx-auto flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold text-primary">
+              Fresh Fades Cut & Shave
+            </h1>
+            <p className="text-muted-foreground">Book your appointment now!</p>
+          </div>
+          <Link href="/login" passHref>
+            <Button>Login / Sign Up</Button>
+          </Link>
         </div>
       </header>
 
@@ -90,4 +95,3 @@ export default function Home() {
     </div>
   );
 }
-
